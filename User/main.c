@@ -78,7 +78,7 @@ int main(void)
 				printf("%s", tmp_buf);
 			}
 			else
-				delay_us(100);
+				Delay_us(100);
 			t++;
 			if (t == 10000) //大约1s钟改变一次LED0状态
 			{

@@ -301,7 +301,7 @@ uint8_t NRF24L01_SPI_SendByte(uint8_t byte)
 static  uint16_t SPI_TIMEOUT_UserCallback(uint8_t errorCode)
 {
   /* 等待超时后的处理,输出错误信息 */
-  FLASH_ERROR("SPI 等待超时!errorCode = %d",errorCode);
+  NRF_ERROR("SPI 等待超时!errorCode = %d",errorCode);
   return 0;
 }
 

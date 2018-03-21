@@ -2,7 +2,7 @@
 #ifndef __24L01_H
 #define __24L01_H             
 #include "stm32f10x.h"
-
+#include <stdio.h>
 /*----------------------------------------------------------------------------*/
 //NRF24L01¼Ä´æÆ÷²Ù×÷ÃüÁî
 #define NRF_READ_REG    0x00  //¶ÁÅäÖÃ¼Ä´æÆ÷,µÍ5Î»Îª¼Ä´æÆ÷µØÖ·
@@ -91,13 +91,13 @@
 #define SPIT_FLAG_TIMEOUT               ((uint32_t)0x1000)
 #define SPIT_LONG_TIMEOUT               ((uint32_t)(10 * SPIT_FLAG_TIMEOUT))
 /*ÐÅÏ¢Êä³ö*/
-#define FLASH_DEBUG_ON         1
+#define NRF_DEBUG_ON         1
 
-#define FLASH_INFO(fmt,arg...)           printf("<<-FLASH-INFO->> "fmt"\n",##arg)
-#define FLASH_ERROR(fmt,arg...)          printf("<<-FLASH-ERROR->> "fmt"\n",##arg)
-#define FLASH_DEBUG(fmt,arg...)          do{\
-                                          if(FLASH_DEBUG_ON)\
-                                          printf("<<-FLASH-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
+#define NRF_INFO(fmt,arg...)           printf("<<-NRF-INFO->> "fmt"\n",##arg)
+#define NRF_ERROR(fmt,arg...)          printf("<<-NRF-ERROR->> "fmt"\n",##arg)
+#define NRF_DEBUG(fmt,arg...)          do{\
+                                          if(NRF_DEBUG_ON)\
+                                          printf("<<-NRF-DEBUG->> [%d]"fmt"\n",__LINE__, ##arg);\
                                           }while(0)
 #define Dummy_Byte                      0xFF
 

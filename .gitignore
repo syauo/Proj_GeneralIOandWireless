@@ -52,5 +52,6 @@ Temporary Items
 Libraries/*
 .vscode/*
 Listing/*
+Output/*
 Project/RVMDK（uv5）/DebugConfig/*
 Project/RVMDK（uv5）/RET/*
