@@ -1,19 +1,3 @@
- /**
-  ******************************************************************************
-  * @file    main.c
-  * @author  fire
-  * @version V1.0
-  * @date    2013-xx-xx
-  * @brief   华邦 8M串行flash测试，并将测试信息通过串口1在电脑的超级终端中打印出来
-  ******************************************************************************
-  * @attention
-  *
-  * 实验平台:秉火 F103-MINI STM32 开发板 
-  * 论坛    :http://www.firebbs.cn
-  * 淘宝    :https://fire-stm32.taobao.com
-  *
-  ******************************************************************************
-  */ 
 #include "stm32f10x.h"
 #include "./usart/bsp_usart.h"
 #include "./led/bsp_led.h"
@@ -35,7 +19,7 @@ typedef enum { FAILED = 0, PASSED = !FAILED} TestStatus;
      
 
 /* 发送缓冲区初始化 */
-uint8_t Tx_Buffer[] = "感谢您选用秉火stm32开发板\r\n";
+uint8_t Tx_Buffer[] = "这是发送缓冲区的数据\r\n";
 uint8_t Rx_Buffer[BufferSize];
 
 __IO uint32_t DeviceID = 0;

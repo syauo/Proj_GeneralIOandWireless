@@ -1,20 +1,3 @@
- /**
-  ******************************************************************************
-  * @file    bsp_xxx.c
-  * @author  STMicroelectronics
-  * @version V1.0
-  * @date    2013-xx-xx
-  * @brief   spi flash 底层应用函数bsp 
-  ******************************************************************************
-  * @attention
-  *
-  * 实验平台:秉火 F103-MINI STM32 开发板 
-  * 论坛    :http://www.firebbs.cn
-  * 淘宝    :https://fire-stm32.taobao.com
-  *
-  ******************************************************************************
-  */
-  
 #include "./flash/bsp_spi_flash.h"
 
 static __IO uint32_t  SPITimeout = SPIT_LONG_TIMEOUT;    
@@ -538,5 +521,4 @@ static  uint16_t SPI_TIMEOUT_UserCallback(uint8_t errorCode)
   FLASH_ERROR("SPI 等待超时!errorCode = %d",errorCode);
   return 0;
 }
-   
-/*********************************************END OF FILE**********************/
+
