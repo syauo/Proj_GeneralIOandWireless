@@ -1,35 +1,8 @@
 #include "stm32f10x.h"
 #include "./usart/bsp_usart.h"
 #include "./led/bsp_led.h"
-#include "./flash/bsp_spi_flash.h"
-
-
-typedef enum { FAILED = 0, PASSED = !FAILED} TestStatus;
-
-/* 获取缓冲区的长度 */
-#define TxBufferSize1   (countof(TxBuffer1) - 1)
-#define RxBufferSize1   (countof(TxBuffer1) - 1)
-#define countof(a)      (sizeof(a) / sizeof(*(a)))
-#define  BufferSize (countof(Tx_Buffer)-1)
-
-#define  FLASH_WriteAddress     0x00000
-#define  FLASH_ReadAddress      FLASH_WriteAddress
-#define  FLASH_SectorToErase    FLASH_WriteAddress
-
-     
-
-/* 发送缓冲区初始化 */
-uint8_t Tx_Buffer[] = "这是发送缓冲区的数据\r\n";
-uint8_t Rx_Buffer[BufferSize];
-
-__IO uint32_t DeviceID = 0;
-__IO uint32_t FlashID = 0;
-__IO TestStatus TransferStatus1 = FAILED;
-
-// 函数原型声明
-void Delay(__IO uint32_t nCount);
-TestStatus Buffercmp(uint8_t* pBuffer1,uint8_t* pBuffer2, uint16_t BufferLength);
-
+#include "./key/bsp_key.h"
+#include "./NRF24L01/24l01.h"
 /*
  * 函数名：main
  * 描述  ：主函数
@@ -37,94 +10,114 @@ TestStatus Buffercmp(uint8_t* pBuffer1,uint8_t* pBuffer2, uint16_t BufferLength)
  * 输出  ：无
  */
 int main(void)
-{ 	
-	LED_GPIO_Config();
-	
+{
+	uint8_t key, mode;
+	uint16_t t = 0;
+	uint8_t tmp_buf[33];
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); // 设置中断优先级分组2
 	/* 配置串口为：115200 8-N-1 */
 	USART_Config();
-	printf("\r\n 这是一个8Mbyte串行flash(W25Q64)实验 \r\n");
-	
-	/* 8M串行flash W25Q64初始化 */
-	SPI_FLASH_Init();
-	
-	/* 获取 Flash Device ID */
-	DeviceID = SPI_FLASH_ReadDeviceID();	
-	Delay( 200 );
-	
-	/* 获取 SPI Flash ID */
-	FlashID = SPI_FLASH_ReadID();	
-	printf("\r\n FlashID is 0x%X,\
-	Manufacturer Device ID is 0x%X\r\n", FlashID, DeviceID);
-	
-	/* 检验 SPI Flash ID */
-	if (FlashID == sFLASH_ID)
-	{	
-		printf("\r\n 检测到串行flash W25Q64 !\r\n");
-		
-		/* 擦除将要写入的 SPI FLASH 扇区，FLASH写入前要先擦除 */
-		// 这里擦除4K，即一个扇区，擦除的最小单位是扇区
-		SPI_FLASH_SectorErase(FLASH_SectorToErase);	 	 
-		
-		/* 将发送缓冲区的数据写到flash中 */
-		// 这里写一页，一页的大小为256个字节
-		SPI_FLASH_BufferWrite(Tx_Buffer, FLASH_WriteAddress, BufferSize);		
-		printf("\r\n 写入的数据为：%s \r\t", Tx_Buffer);
-		
-		/* 将刚刚写入的数据读出来放到接收缓冲区中 */
-		SPI_FLASH_BufferRead(Rx_Buffer, FLASH_ReadAddress, BufferSize);
-		printf("\r\n 读出的数据为：%s \r\n", Rx_Buffer);
-		
-		/* 检查写入的数据与读出的数据是否相等 */
-		TransferStatus1 = Buffercmp(Tx_Buffer, Rx_Buffer, BufferSize);
-		
-		if( PASSED == TransferStatus1 )
-		{ 
-			LED2_ON;
-            LED0_ON;
-			printf("\r\n 8M串行flash(W25Q64)测试成功!\n\r");
-		}
-		else
-		{   LED0_ON;     
-			LED1_ON;
-			printf("\r\n 8M串行flash(W25Q64)测试失败!\n\r");
-		}
-	}// if (FlashID == sFLASH_ID)
-	else// if (FlashID == sFLASH_ID)
-	{ 
-		LED1_ON;
-		printf("\r\n 获取不到 W25Q64 ID!\n\r");
+	/* 初始化与LED连接的硬件接口 */
+	LED_GPIO_Config();
+	/* 按键初始化 */										
+	Key_GPIO_Config();
+	/* 无线模块初始化 */
+	NRF24L01_Config();
+
+	/* 检查无线模块是否在位 */
+	printf("\r\n开始检查无线模块是否在位...\r\n");
+	while (NRF24L01_Check()) 
+	{
+		printf("\rNRF24L01 Error");
+		delay_ms(200);
+		printf("\r               ");
+		delay_ms(200);
 	}
+	printf("\rNRF24L01 Check - OK");
+
+	/* 依据按键确定进入哪个模式!*/
+	while (1) 
+	{
+		key = Key_Scan(0);
+		if (key == KEY0_PRES)
+		{
+			mode = 0;	// RX模式
+			break;
+		}
+		else if (key == KEY1_PRES)
+		{
+			mode = 1;	// TX模式
+			break;
+		}
+		/* 闪烁提示按键信息 */
+		t++;
+		if (t == 100)
+			printf("\r\n> KEY0:RX_Mode  KEY1:TX_Mode"); 
+		if (t == 200)
+		{
+			printf("\r                               ");
+			t = 0;
+		}
+		delay_ms(5);
+	}
+	printf("\r                               "); //清空按键提示
 	
-	while(1);  
+	/* 若为RX模式 */
+	if (mode == 0)
+	{
+		printf("\rNRF24L01 RX_Mode\r\n");
+		printf("Received DATA:\r\n");
+		NRF24L01_RX_Mode();
+		while (1)
+		{
+			/* 一旦接收到信息,则显示出来. */
+			if (NRF24L01_RxPacket(tmp_buf) == 0) 
+			{
+				tmp_buf[32] = 0; //加入字符串结束符
+				printf("%s", tmp_buf);
+			}
+			else
+				delay_us(100);
+			t++;
+			if (t == 10000) //大约1s钟改变一次LED0状态
+			{
+				t = 0;
+				LED0 = !LED0;
+			}
+		}
+	}
+	/* 反之，若为TX模式 */
+	else 
+	{
+		printf("\rNRF24L01 TX_Mode\r\n");
+		NRF24L01_TX_Mode();
+		//所发送的字符串从空格键开始
+		mode = ' '; 
+		while (1)
+		{
+			if (NRF24L01_TxPacket(tmp_buf) == TX_OK)
+			{
+				printf("Sended DATA:");
+				printf("%s", tmp_buf);
+				key = mode;
+				for (t = 0; t < 32; t++)
+				{
+					key++;
+					if (key > ('~'))
+						key = ' ';
+					tmp_buf[t] = key;
+				}
+				mode++;
+				if (mode > '~')
+					mode = ' ';
+				tmp_buf[32] = 0; //加入结束符
+			}
+			else
+			{
+				printf("Send Failed ");
+			}
+			LED0 = !LED0;
+			delay_ms(1500);
+		}
+	}
 }
-
-/*
- * 函数名：Buffercmp
- * 描述  ：比较两个缓冲区中的数据是否相等
- * 输入  ：-pBuffer1     src缓冲区指针
- *         -pBuffer2     dst缓冲区指针
- *         -BufferLength 缓冲区长度
- * 输出  ：无
- * 返回  ：-PASSED pBuffer1 等于   pBuffer2
- *         -FAILED pBuffer1 不同于 pBuffer2
- */
-TestStatus Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
-{
-  while(BufferLength--)
-  {
-    if(*pBuffer1 != *pBuffer2)
-    {
-      return FAILED;
-    }
-
-    pBuffer1++;
-    pBuffer2++;
-  }
-  return PASSED;
-}
-
-void Delay(__IO uint32_t nCount)
-{
-  for(; nCount != 0; nCount--);
-}
-/*********************************************END OF FILE**********************/

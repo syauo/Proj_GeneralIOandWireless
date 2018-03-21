@@ -108,7 +108,7 @@
 #define RX_PLOAD_WIDTH  32      //32字节的用户数据宽度
                                            
 
-void NRF24L01_Init(void);//初始化
+void NRF24L01_Config(void);//初始化
 void NRF24L01_RX_Mode(void);//配置为接收模式
 void NRF24L01_TX_Mode(void);//配置为发送模式
 uint8_t NRF24L01_Write_Buf(uint8_t reg, uint8_t *pBuf, uint8_t u8s);//写数据区

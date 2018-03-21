@@ -7,7 +7,7 @@ static __IO uint32_t  SPITimeout = SPIT_LONG_TIMEOUT;
 static uint16_t SPI_TIMEOUT_UserCallback(uint8_t errorCode);
 
 //初始化24L01的IO口
-void NRF24L01_Init(void)
+void NRF24L01_Config(void)
 {  
     GPIO_InitTypeDef GPIO_InitStructure;
     SPI_InitTypeDef  SPI_InitStructure; 
