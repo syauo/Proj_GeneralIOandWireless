@@ -5,8 +5,8 @@
   * @version	V1.0
   * @Description: 实现按键输入
   */
-#include "bsp_key.h"
-#include "bsp_SysTick.h"
+#include "./key/bsp_key.h"
+#include "./SysTick/bsp_SysTick.h"
 
 /**
  * @brief  配置按键用到的I/O口
